@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Display Test</title>
+    <style>
+        .document-display {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            border: 1px solid red;
+        }
+        .document-header {
+            margin-bottom: 20px;
+        }
+        .meta {
+            color: #666;
+            margin: 10px 0;
+        }
+        .content {
+            line-height: 1.6;
+        }
+        .content h2 {
+            margin-top: 20px;
+            color: #333;
+        }
+        .content h3 {
+            color: #666;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Display Test</h1>
+    <div id="test-results"></div>
+    <div id="document-display" class="document-display"></div>
+
+    <script>
+        function formatContent(htmlContent) {
+            if (!htmlContent) return '';
+            
+            // Create a temporary div to parse the HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = htmlContent;
+            
+            // Remove any script tags for security
+            const scripts = temp.getElementsByTagName('script');
+            for (let i = scripts.length - 1; i >= 0; i--) {
+                scripts[i].remove();
+            }
+            
+            return temp.innerHTML;
+        }
+
+        async function runTest() {
+            const results = document.getElementById('test-results');
+            const display = document.getElementById('document-display');
+            
+            try {
+                // Test 1: Load chunk 1
+                const response = await fetch('data/chunk_001/chunk_001_successful.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to load chunk: ${response.status}`);
+                }
+                const chunkData = await response.json();
+                results.innerHTML += '<p>✅ Successfully loaded chunk_001</p>';
+                
+                // Display all document titles for debugging
+                results.innerHTML += '<h3>Documents in chunk:</h3>';
+                results.innerHTML += '<ul>';
+                if (chunkData.documents) {
+                    chunkData.documents.forEach(doc => {
+                        results.innerHTML += `<li>${doc.title}</li>`;
+                    });
+                } else {
+                    results.innerHTML += '<li>No documents array found in chunk</li>';
+                    console.log('Chunk structure:', chunkData);
+                }
+                results.innerHTML += '</ul>';
+                
+                // Test 2: Find specific document
+                const targetTitle = "Opening the black box of knowledge management mechanisms: exploring knowledge flows at a consultancy";
+                const doc = chunkData.documents?.find(d => d.title === targetTitle);
+                
+                if (!doc) {
+                    throw new Error('Target document not found');
+                }
+                results.innerHTML += '<p>✅ Found target document</p>';
+                
+                // Test 3: Display document content
+                const content = `
+                    <div class="document-header">
+                        <h2>${doc.title}</h2>
+                        <div class="meta">
+                            <div><strong>Category:</strong> ${doc.category}</div>
+                            <div><strong>Published:</strong> ${new Date(doc.published_date).toLocaleDateString()}</div>
+                            ${doc.author ? `<div><strong>Author:</strong> ${doc.author}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="content">
+                        ${formatContent(doc.content.text)}
+                    </div>
+                `;
+                display.innerHTML = content;
+                results.innerHTML += '<p>✅ Displayed document content</p>';
+                
+            } catch (error) {
+                results.innerHTML += `<p class="error">❌ Error: ${error.message}</p>`;
+                console.error('Test failed:', error);
+            }
+        }
+        
+        runTest();
+    </script>
+</body>
+</html>

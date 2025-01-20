@@ -46,13 +46,7 @@ class KnowledgeInterface {
             this.isSidebarVisible = !this.isSidebarVisible;
         });
 
-        this.viewToggleButton.addEventListener('click', () => {
-            this.isVisualizationView = !this.isVisualizationView;
-            document.body.classList.toggle('show-visualization', this.isVisualizationView);
-            if (this.isVisualizationView) {
-                this.renderDNAVisualization();
-            }
-        });
+        this.viewToggleButton.addEventListener('click', () => this.toggleView());
 
         this.exportPlaylistButton.addEventListener('click', () => this.exportPlaylist());
         this.clearPlaylistButton.addEventListener('click', () => this.clearPlaylist());
@@ -401,70 +395,94 @@ class KnowledgeInterface {
     }
 
     displayDocument(doc) {
-        const template = this.documentTemplate.content.cloneNode(true);
+        if (!doc) return;
         
-        // Set source link
-        const sourceLink = template.querySelector('.source-link');
-        if (doc.url) {
-            sourceLink.href = doc.url;
-        } else {
-            sourceLink.style.display = 'none';
-        }
+        console.log('Displaying document:', doc);
         
-        // Set title and meta
-        template.querySelector('h2').textContent = doc.title || 'Untitled';
-        template.querySelector('.meta').innerHTML = `
-            <span>Category: ${doc.category}</span>
-            ${doc.author ? `<span>Author: ${doc.author}</span>` : ''}
-            ${doc.published_date ? `<span>Date: ${new Date(doc.published_date).toLocaleDateString()}</span>` : ''}
+        // Get the content display element
+        const contentDisplay = document.querySelector('.content-display');
+        if (!contentDisplay) return;
+        
+        // Format the document content
+        const content = `
+            <div class="document-container">
+                <div class="document-header">
+                    <h2>${doc.title}</h2>
+                    <div class="meta">
+                        <div><strong>Category:</strong> ${doc.category}</div>
+                        ${doc.published_date ? `<div><strong>Published:</strong> ${new Date(doc.published_date).toLocaleDateString()}</div>` : ''}
+                        ${doc.author ? `<div><strong>Author:</strong> ${doc.author}</div>` : ''}
+                    </div>
+                </div>
+                
+                <div class="document-actions">
+                    <a href="${doc.url}" target="_blank" class="source-link">View Source</a>
+                    <button class="add-to-playlist" ${this.playlist.find(item => item.id === doc.id) ? 'disabled' : ''}>
+                        ${this.playlist.find(item => item.id === doc.id) ? 'Added to Playlist' : 'Add to Playlist'}
+                    </button>
+                </div>
+                
+                <div class="tag-container">
+                    <input type="text" class="tag-input" placeholder="Add tags...">
+                    <div class="tags">
+                        ${(doc.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+                
+                <div class="document-content">
+                    ${this.formatContent(doc.content.text)}
+                </div>
+            </div>
         `;
         
-        // Set content
-        template.querySelector('.content-body').innerHTML = this.formatContent(doc.content);
+        contentDisplay.innerHTML = content;
         
-        // Setup tag input
-        const tagInput = template.querySelector('.tag-input');
-        const tagContainer = template.querySelector('.tags');
-        
-        const updateTags = () => {
-            tagContainer.innerHTML = (doc.tags || [])
-                .map(tag => `<span class="tag">${tag}</span>`)
-                .join('');
-        };
-        
-        tagInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.value.trim()) {
-                this.addTag(doc, e.target.value.trim());
-                e.target.value = '';
-                updateTags();
-            }
-        });
-        
-        updateTags();
-        
-        // Setup playlist button
-        const playlistButton = template.querySelector('.add-to-playlist');
-        playlistButton.addEventListener('click', () => {
-            this.addToPlaylist(doc);
-            playlistButton.textContent = 'Added to Playlist';
-            playlistButton.disabled = true;
-        });
-        
-        if (this.playlist.find(item => item.id === doc.id)) {
-            playlistButton.textContent = 'Added to Playlist';
-            playlistButton.disabled = true;
+        // Setup event listeners
+        const playlistButton = contentDisplay.querySelector('.add-to-playlist');
+        if (playlistButton) {
+            playlistButton.addEventListener('click', () => {
+                this.addToPlaylist(doc);
+                playlistButton.textContent = 'Added to Playlist';
+                playlistButton.disabled = true;
+            });
         }
         
-        this.contentDisplay.innerHTML = '';
-        this.contentDisplay.appendChild(template);
+        const tagInput = contentDisplay.querySelector('.tag-input');
+        const tagContainer = contentDisplay.querySelector('.tags');
+        if (tagInput && tagContainer) {
+            tagInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                    this.addTag(doc, e.target.value.trim());
+                    e.target.value = '';
+                    tagContainer.innerHTML = (doc.tags || [])
+                        .map(tag => `<span class="tag">${tag}</span>`)
+                        .join('');
+                }
+            });
+        }
+        
+        // Update URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('doc', doc.id || doc.url);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
+        
+        // Update visualization state
+        document.body.classList.remove('show-visualization');
+        this.isVisualizationView = false;
         
         // Update selection in list
-        this.knowledgeList.querySelectorAll('.knowledge-item').forEach(item => {
-            item.classList.toggle('selected', item.dataset.id === doc.id);
+        const items = document.querySelectorAll('.knowledge-item');
+        items.forEach(item => {
+            item.classList.toggle('selected', item.dataset.id === (doc.id || doc.url));
         });
+    }
+    
+    toggleView() {
+        this.isVisualizationView = !this.isVisualizationView;
+        document.body.classList.toggle('show-visualization', this.isVisualizationView);
         
-        if (window.innerWidth <= 768) {
-            document.body.classList.remove('show-sidebar');
+        if (this.isVisualizationView) {
+            this.renderDNAVisualization();
         }
     }
 }
