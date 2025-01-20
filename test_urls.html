@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test URLs and Titles</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --text: #1f2937;
+            --bg: #f5f5f5;
+            --border: #e5e7eb;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+        }
+        
+        .document-list {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .document-item {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .document-title {
+            font-size: 18px;
+            line-height: 1.4;
+            margin: 0 0 15px 0;
+        }
+        
+        .document-title a {
+            display: block;
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px;
+            margin: -10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        
+        .document-title a:hover,
+        .document-title a:focus {
+            background: var(--bg);
+            text-decoration: underline;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .source-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 8px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 22px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+        }
+        
+        .source-button:hover,
+        .source-button:focus {
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .document-list {
+                padding: 10px;
+            }
+            
+            .document-item {
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            
+            .document-title {
+                font-size: 16px;
+            }
+            
+            .source-button {
+                width: 100%;
+                justify-content: center;
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .document-list {
+                padding: 5px;
+            }
+            
+            .document-item {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-list">
+        <!-- Document 1 -->
+        <div class="document-item">
+            <h2 class="document-title">
+                <a href="https://www.emerald.com/insight/content/doi/10.1108/k-08-2022-1118/full/html">
+                    Opening the black box of knowledge management mechanisms: exploring knowledge flows at a consultancy
+                </a>
+            </h2>
+            <div class="document-actions">
+                <a href="https://www.emerald.com/insight/content/doi/10.1108/k-08-2022-1118/full/html" class="source-button" target="_blank" rel="noopener noreferrer">
+                    Take me to source
+                </a>
+            </div>
+        </div>
+        
+        <!-- Document 2 -->
+        <div class="document-item">
+            <h2 class="document-title">
+                <a href="https://uclouvain.be/en/research-institutes/ilc/cecl/transcription-guidelines.html">
+                    Transcription guidelines
+                </a>
+            </h2>
+            <div class="document-actions">
+                <a href="https://uclouvain.be/en/research-institutes/ilc/cecl/transcription-guidelines.html" class="source-button" target="_blank" rel="noopener noreferrer">
+                    Take me to source
+                </a>
+            </div>
+        </div>
+        
+        <!-- Document 3 -->
+        <div class="document-item">
+            <h2 class="document-title">
+                <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10067271/">
+                    Mutation bias and the predictability of evolution
+                </a>
+            </h2>
+            <div class="document-actions">
+                <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10067271/" class="source-button" target="_blank" rel="noopener noreferrer">
+                    Take me to source
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -90,6 +90,7 @@ class KnowledgeInterface {
             // Process and standardize the document format
             this.documents = documents.map(doc => ({
                 id: doc.id || doc.url,
+                url: doc.url, // Preserve the URL
                 title: doc.title || 'Untitled',
                 category: doc.category || this.determineCategory(doc.content?.text || '', doc.title || ''),
                 text: doc.content?.text || '',
@@ -399,82 +400,153 @@ class KnowledgeInterface {
         
         console.log('Displaying document:', doc);
         
-        // Get the content display element
         const contentDisplay = document.querySelector('.content-display');
         if (!contentDisplay) return;
         
-        // Format the document content
         const content = `
-            <div class="document-container">
-                <div class="document-header">
-                    <h2>${doc.title}</h2>
-                    <div class="meta">
-                        <div><strong>Category:</strong> ${doc.category}</div>
-                        ${doc.published_date ? `<div><strong>Published:</strong> ${new Date(doc.published_date).toLocaleDateString()}</div>` : ''}
-                        ${doc.author ? `<div><strong>Author:</strong> ${doc.author}</div>` : ''}
-                    </div>
-                </div>
-                
-                <div class="document-actions">
-                    <a href="${doc.url}" target="_blank" class="source-link">View Source</a>
-                    <button class="add-to-playlist" ${this.playlist.find(item => item.id === doc.id) ? 'disabled' : ''}>
-                        ${this.playlist.find(item => item.id === doc.id) ? 'Added to Playlist' : 'Add to Playlist'}
+            <div class="mobile-document">
+                <div class="mobile-header">
+                    <button class="toggle-menu">
+                        <span class="icon">☰</span>
                     </button>
-                </div>
-                
-                <div class="tag-container">
-                    <input type="text" class="tag-input" placeholder="Add tags...">
-                    <div class="tags">
-                        ${(doc.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                    <div class="header-actions">
+                        ${doc.url ? 
+                            `<a href="${doc.url}" target="_blank" rel="noopener noreferrer" class="source-button">
+                                Take me to source
+                            </a>` : ''
+                        }
+                        <button class="add-to-playlist-button" ${this.playlist.find(item => item.id === doc.id) ? 'disabled' : ''}>
+                            ${this.playlist.find(item => item.id === doc.id) ? '✓ Added' : '+ Add to playlist'}
+                        </button>
                     </div>
                 </div>
-                
-                <div class="document-content">
-                    ${this.formatContent(doc.content.text)}
+
+                <div class="document-container">
+                    <div class="document-item">
+                        <h2 class="document-title">
+                            ${doc.url ? 
+                                `<a href="${doc.url}" target="_blank" rel="noopener noreferrer">
+                                    ${doc.title || 'Untitled'}
+                                </a>` :
+                                doc.title || 'Untitled'
+                            }
+                        </h2>
+                        <div class="meta">
+                            ${doc.category ? `<div class="meta-item category">${doc.category}</div>` : ''}
+                            ${doc.published_date ? `<div class="meta-item date">${new Date(doc.published_date).toLocaleDateString()}</div>` : ''}
+                            ${doc.author ? `<div class="meta-item author">${doc.author}</div>` : ''}
+                        </div>
+                        <div class="tag-container">
+                            <div class="tags">
+                                ${(doc.tags || []).map(tag => `
+                                    <span class="tag">
+                                        ${tag}
+                                        <button class="remove-tag" data-tag="${tag}">×</button>
+                                    </span>
+                                `).join('')}
+                            </div>
+                            <input type="text" class="tag-input" placeholder="Add tag...">
+                        </div>
+                    </div>
+
+                    <div class="document-content">
+                        ${this.formatContent(doc.content.text)}
+                    </div>
+                </div>
+
+                <div class="mobile-menu">
+                    <div class="menu-header">
+                        <h3>All Documents</h3>
+                        <button class="close-menu">×</button>
+                    </div>
+                    <div class="menu-content">
+                        ${this.documents.map(d => `
+                            <div class="menu-item ${d.id === doc.id ? 'active' : ''}" data-id="${d.id}">
+                                <div class="menu-item-title">
+                                    ${d.url ? 
+                                        `<a href="${d.url}" target="_blank" rel="noopener noreferrer">
+                                            ${d.title || 'Untitled'}
+                                        </a>` :
+                                        d.title || 'Untitled'
+                                    }
+                                </div>
+                                ${d.category ? `<div class="menu-item-category">${d.category}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `;
-        
+
         contentDisplay.innerHTML = content;
         
-        // Setup event listeners
-        const playlistButton = contentDisplay.querySelector('.add-to-playlist');
-        if (playlistButton) {
-            playlistButton.addEventListener('click', () => {
-                this.addToPlaylist(doc);
-                playlistButton.textContent = 'Added to Playlist';
-                playlistButton.disabled = true;
+        // Add event listeners
+        const toggleMenu = contentDisplay.querySelector('.toggle-menu');
+        const closeMenu = contentDisplay.querySelector('.close-menu');
+        const mobileMenu = contentDisplay.querySelector('.mobile-menu');
+        const menuItems = contentDisplay.querySelectorAll('.menu-item');
+        
+        if (toggleMenu && mobileMenu) {
+            toggleMenu.addEventListener('click', () => {
+                mobileMenu.classList.add('show');
+                document.body.style.overflow = 'hidden';
             });
         }
         
+        if (closeMenu && mobileMenu) {
+            closeMenu.addEventListener('click', () => {
+                mobileMenu.classList.remove('show');
+                document.body.style.overflow = '';
+            });
+        }
+        
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const docId = item.dataset.id;
+                const selectedDoc = this.documents.find(d => d.id === docId);
+                if (selectedDoc) {
+                    this.displayDocument(selectedDoc);
+                    mobileMenu.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        const addToPlaylistButton = contentDisplay.querySelector('.add-to-playlist-button');
+        if (addToPlaylistButton) {
+            addToPlaylistButton.addEventListener('click', () => {
+                this.addToPlaylist(doc);
+                addToPlaylistButton.disabled = true;
+                addToPlaylistButton.textContent = '✓ Added';
+            });
+        }
+
         const tagInput = contentDisplay.querySelector('.tag-input');
-        const tagContainer = contentDisplay.querySelector('.tags');
-        if (tagInput && tagContainer) {
-            tagInput.addEventListener('keydown', (e) => {
+        if (tagInput) {
+            tagInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && e.target.value.trim()) {
                     this.addTag(doc, e.target.value.trim());
                     e.target.value = '';
-                    tagContainer.innerHTML = (doc.tags || [])
-                        .map(tag => `<span class="tag">${tag}</span>`)
-                        .join('');
                 }
             });
         }
-        
-        // Update URL
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('doc', doc.id || doc.url);
-        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams}`);
-        
-        // Update visualization state
-        document.body.classList.remove('show-visualization');
-        this.isVisualizationView = false;
-        
-        // Update selection in list
-        const items = document.querySelectorAll('.knowledge-item');
-        items.forEach(item => {
-            item.classList.toggle('selected', item.dataset.id === (doc.id || doc.url));
+
+        const removeTags = contentDisplay.querySelectorAll('.remove-tag');
+        removeTags.forEach(button => {
+            button.addEventListener('click', () => {
+                const tag = button.dataset.tag;
+                this.removeTag(doc, tag);
+            });
         });
+    }
+    
+    updateTagDisplay(container, tags) {
+        container.innerHTML = tags.map(tag => `
+            <span class="tag">
+                ${tag}
+                <button class="remove-tag" data-tag="${tag}">×</button>
+            </span>
+        `).join('');
     }
     
     toggleView() {
