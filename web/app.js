@@ -66,18 +66,39 @@ class KnowledgeInterface {
 
     async loadDocuments() {
         try {
-            const response = await fetch('../data.json');
-            const data = await response.json();
-            this.documents = data.documents.map(doc => ({
+            const documents = [];
+            // Load all chunks from the repository
+            for (let i = 1; i <= 7; i++) {
+                const chunkNum = String(i).padStart(3, '0');
+                try {
+                    const response = await fetch(`../data/chunk_${chunkNum}/chunk_${chunkNum}_successful.json`);
+                    if (!response.ok) {
+                        console.warn(`Chunk ${chunkNum} not found or failed to load`);
+                        continue;
+                    }
+                    const chunkData = await response.json();
+                    if (Array.isArray(chunkData)) {
+                        documents.push(...chunkData);
+                    } else if (chunkData.documents) {
+                        documents.push(...chunkData.documents);
+                    }
+                } catch (error) {
+                    console.warn(`Error loading chunk ${chunkNum}:`, error);
+                }
+            }
+            
+            // Process and standardize the document format
+            this.documents = documents.map(doc => ({
                 id: doc.id || doc.url,
-                title: doc.title,
+                title: doc.title || 'Untitled',
                 category: doc.category || this.determineCategory(doc.content?.text || '', doc.title || ''),
                 text: doc.content?.text || '',
-                content: doc.content,
+                content: doc.content || {},
                 connections: doc.connections || [],
-                tags: []
+                tags: doc.tags || []
             }));
             
+            console.log(`Loaded ${this.documents.length} documents`);
             this.totalDocsElement.textContent = this.documents.length;
             this.filterDocuments();
         } catch (error) {
