@@ -66,17 +66,21 @@ class KnowledgeInterface {
 
     async loadDocuments() {
         try {
+            console.log('Starting to load documents...');
             const documents = [];
             // Load all chunks from the repository
             for (let i = 1; i <= 7; i++) {
                 const chunkNum = String(i).padStart(3, '0');
                 try {
-                    const response = await fetch(`../data/chunk_${chunkNum}/chunk_${chunkNum}_successful.json`);
+                    const url = `./data/chunk_${chunkNum}/chunk_${chunkNum}_successful.json`;
+                    console.log(`Attempting to load: ${url}`);
+                    const response = await fetch(url);
                     if (!response.ok) {
-                        console.warn(`Chunk ${chunkNum} not found or failed to load`);
+                        console.warn(`Chunk ${chunkNum} not found or failed to load. Status: ${response.status}`);
                         continue;
                     }
                     const chunkData = await response.json();
+                    console.log(`Loaded chunk ${chunkNum}:`, chunkData);
                     if (Array.isArray(chunkData)) {
                         documents.push(...chunkData);
                     } else if (chunkData.documents) {
@@ -86,6 +90,8 @@ class KnowledgeInterface {
                     console.warn(`Error loading chunk ${chunkNum}:`, error);
                 }
             }
+            
+            console.log(`Total documents loaded: ${documents.length}`);
             
             // Process and standardize the document format
             this.documents = documents.map(doc => ({
@@ -98,7 +104,7 @@ class KnowledgeInterface {
                 tags: doc.tags || []
             }));
             
-            console.log(`Loaded ${this.documents.length} documents`);
+            console.log(`Processed ${this.documents.length} documents`);
             this.totalDocsElement.textContent = this.documents.length;
             this.filterDocuments();
         } catch (error) {

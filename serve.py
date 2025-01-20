@@ -16,10 +16,10 @@ class CORSRequestHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     # Change to the directory containing web files
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    web_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'web')
+    os.chdir(web_dir)
     
     # Start server
-    port = 8000
-    httpd = HTTPServer(('localhost', port), CORSRequestHandler)
-    print(f'Serving at http://localhost:{port}')
+    httpd = HTTPServer(('localhost', 8000), CORSRequestHandler)
+    print(f'Server started at http://localhost:8000')
     httpd.serve_forever()
