@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Re:DNA - Knowledge Evolution</title>
-    <link rel="stylesheet" href="web/styles.css">
+    <link rel="stylesheet" href="./styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
@@ -80,8 +80,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- Document Template -->
+        <template id="document-template">
+            <div class="document-view">
+                <div class="document-actions">
+                    <a href="" class="source-link" target="_blank">View Source →</a>
+                    <div class="document-controls">
+                        <button class="add-to-playlist">Add to Playlist</button>
+                        <div class="tag-container">
+                            <input type="text" class="tag-input" placeholder="Add tags...">
+                            <div class="tags"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-header">
+                    <h2></h2>
+                    <div class="meta"></div>
+                </div>
+                <div class="content-body"></div>
+            </div>
+        </template>
     </div>
 
-    <script src="web/app.js" type="module"></script>
+    <script src="./app.js" type="module"></script>
+    <script src="./knowledge-dna.js" type="module"></script>
 </body>
 </html>
