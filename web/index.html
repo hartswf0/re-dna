@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Re:DNA - Knowledge Evolution</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <button id="mobile-menu" class="mobile-menu">☰</button>
+            <div class="header-content">
+                <h1>Re:DNA</h1>
+                <p class="tagline">Knowledge evolves through structured transformation</p>
+            </div>
+            <button id="view-toggle" class="view-toggle">🧬</button>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="search-controls">
+                    <input type="text" id="search-input" placeholder="Search knowledge...">
+                    <div class="category-filters">
+                        <button class="category-btn active" data-category="all">All</button>
+                        <button class="category-btn" data-category="research">Research</button>
+                        <button class="category-btn" data-category="technical">Technical</button>
+                        <button class="category-btn" data-category="knowledge_management">Knowledge</button>
+                        <button class="category-btn" data-category="transcription">Transcription</button>
+                    </div>
+                </div>
+                
+                <div class="sidebar-scroll">
+                    <div class="playlist-controls">
+                        <h3>Knowledge Playlist</h3>
+                        <div class="playlist-actions">
+                            <button id="export-playlist" class="action-btn">Export Playlist</button>
+                            <button id="clear-playlist" class="action-btn">Clear Playlist</button>
+                        </div>
+                        <div id="playlist-items" class="playlist-items">
+                            <!-- Playlist items will be added here -->
+                        </div>
+                    </div>
+
+                    <div class="knowledge-list" id="knowledge-list">
+                        <!-- Items will be dynamically populated -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-viewer">
+                <div id="helix-visualization" class="visualization-container">
+                    <div class="dna-container">
+                        <svg id="knowledge-graph"></svg>
+                    </div>
+                    <div class="evolution-controls">
+                        <button id="create-strand" class="evolution-btn">Create New Strand</button>
+                        <button id="mutate-strand" class="evolution-btn">Mutate</button>
+                        <button id="combine-strands" class="evolution-btn">Combine Strands</button>
+                        <button id="save-evolution" class="evolution-btn">Save Evolution</button>
+                    </div>
+                </div>
+                <div id="content-display" class="content-display">
+                    <div class="welcome-message">
+                        <h2>Welcome to Re:DNA</h2>
+                        <p>Select an item from the list to view its content. Add items to your playlist and tag them for organization.</p>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Documents</span>
+                                <span class="stat-value" id="total-docs">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">In Playlist</span>
+                                <span class="stat-value" id="playlist-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Template -->
+        <template id="document-template">
+            <div class="document-view">
+                <div class="document-actions">
+                    <a href="" class="source-link" target="_blank">View Source →</a>
+                    <div class="document-controls">
+                        <button class="add-to-playlist">Add to Playlist</button>
+                        <div class="tag-container">
+                            <input type="text" class="tag-input" placeholder="Add tags...">
+                            <div class="tags"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-header">
+                    <h2></h2>
+                    <div class="meta"></div>
+                </div>
+                <div class="content-body"></div>
+            </div>
+        </template>
+    </div>
+
+    <script src="app.js" type="module"></script>
+</body>
+</html>

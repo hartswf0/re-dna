@@ -1,0 +1,16 @@
+{
+  "name": "re-dna",
+  "version": "1.0.0",
+  "description": "Knowledge Evolution Through Structured Transformation",
+  "main": "web/app.js",
+  "scripts": {
+    "start": "http-server web -c-1",
+    "test": "python -m pytest"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "http-server": "^14.1.1"
+  },
+  "author": "",
+  "license": "MIT"
+}
