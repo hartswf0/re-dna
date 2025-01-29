@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Enhanced Barcode-Style Document Visualization</title>
+    <style>
+        :root {
+            /* Category Colors */
+            --research-color: #4CAF50;
+            --technical-color: #2196F3;
+            --knowledge-color: #9C27B0;
+            --transcription-color: #FF9800;
+            
+            /* UI Colors */
+            --background-color: #1a1a1a;
+            --text-color: #ffffff;
+            --border-color: #333333;
+            --hover-color: rgba(255, 255, 255, 0.1);
+            --selected-color: rgba(255, 255, 255, 0.2);
+            
+            /* Transitions */
+            --transition-speed: 0.2s;
+        }
+
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .main-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .categories-container {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+            padding: 20px;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        /* Category Columns */
+        .category-column {
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .category-label {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .documents-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Document Bars */
+        .document-bar {
+            width: 100%;
+            height: var(--bar-height, 40px);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            opacity: 0.8;
+        }
+
+        .document-bar:hover {
+            opacity: 1;
+            transform: translateX(4px);
+        }
+
+        .document-bar.selected {
+            opacity: 1;
+            transform: translateX(8px);
+            box-shadow: 0 0 0 2px var(--text-color);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            pointer-events: none;
+            transition: opacity var(--transition-speed) ease;
+            opacity: 0;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: var(--background-color);
+            border-left: 1px solid var(--border-color);
+            transform: translateX(100%);
+            transition: transform var(--transition-speed) ease;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .preview-panel.active {
+            transform: translateX(0);
+        }
+
+        .preview-content {
+            padding: 20px;
+        }
+
+        .preview-content h3 {
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .preview-content .meta {
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .preview-text {
+            font-size: 15px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .preview-text p {
+            margin-bottom: 16px;
+        }
+
+        .preview-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            margin-right: 10px;
+        }
+
+        .tags-section {
+            margin-bottom: 20px;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: var(--hover-color);
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .tag.selected {
+            background: var(--selected-color);
+        }
+
+        .remove-tag {
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .tag-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .add-tag-button {
+            padding: 8px 16px;
+        }
+
+        /* Buttons */
+        .action-button {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .action-button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* Search and Filter */
+        .toolbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .filter-container {
+            position: relative;
+        }
+
+        .filter-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 4px;
+            display: none;
+            z-index: 1000;
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .filter-menu.active {
+            display: block;
+        }
+
+        .filter-section {
+            margin-bottom: 12px;
+        }
+
+        .filter-section-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 8px 12px;
+            background: var(--hover-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--hover-color);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .document-bar {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* Playlist Panel */
+        .playlist-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--background-color);
+            border-top: 1px solid var(--border-color);
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform var(--transition-speed) ease;
+            z-index: 100;
+        }
+
+        .playlist-panel.active {
+            transform: translateY(0);
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .playlist-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: var(--hover-color);
+            border-radius: 4px;
+        }
+
+        .playlist-item span {
+            margin-right: 16px;
+        }
+
+        .remove-playlist-item {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 18px;
+            opacity: 0.7;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .remove-playlist-item:hover {
+            opacity: 1;
+        }
+
+        .playlist-actions {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Search and Filter Bar -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <input type="text" class="search-input" placeholder="Search documents..." aria-label="Search documents">
+            <div class="filter-container">
+                <button class="action-button filter-button" aria-label="Filter documents">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                    </svg>
+                </button>
+                <div class="filter-menu" aria-label="Filter options"></div>
+            </div>
+        </div>
+        <div class="toolbar-right">
+            <button class="action-button" onclick="document.querySelector('.playlist-panel').classList.toggle('active')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M15 6H3v2h12V6zm0 4H3v2h12V10zm0 4H3v2h12v-2zM3 16h8v-2H3v2z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="categories-container" aria-label="Document categories"></div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" role="tooltip"></div>
+
+    <!-- Preview Panel -->
+    <div class="preview-panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+        <!-- <button class="close-button" aria-label="Close preview">&times;</button> -->
+        <div class="preview-content">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <!-- Playlist Panel -->
+    <div class="playlist-panel" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="playlist-title">
+        <div class="playlist-header">
+            <h3 id="playlist-title">Playlist</h3>
+            <div class="playlist-actions">
+                <button class="action-button" onclick="downloadPlaylist()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                </button>
+                <button class="action-button" onclick="document.querySelector('.playlist-panel').classList.remove('active')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="playlist-items"></div>
+    </div>
+
+    <!-- Multi-Select Action Bar -->
+    <div class="multi-select-bar" aria-label="Multi-select actions">
+        <!-- Action buttons will be dynamically inserted here -->
+    </div>
+
+    <!-- Zoom Indicator -->
+    <div class="zoom-indicator">Zoom: 100%</div>
+
+    <script>
+        // Document state
+        let documents = [];
+        let selectedDocuments = new Set();
+        let isMultiSelectMode = false;
+        let selectedTag = null;
+
+        // Load documents from all chunks
+        async function loadDocuments() {
+            try {
+                console.log('Starting to load documents...');
+                const documents = [];
+                
+                // Load all chunks from the repository
+                for (let i = 1; i <= 7; i++) {
+                    const chunkNum = String(i).padStart(3, '0');
+                    try {
+                        const url = `data/chunk_${chunkNum}/chunk_${chunkNum}_successful.json`;
+                        console.log(`Attempting to load: ${url}`);
+                        const response = await fetch(url);
+                        if (!response.ok) {
+                            console.warn(`Chunk ${chunkNum} not found or failed to load. Status: ${response.status}`);
+                            continue;
+                        }
+                        const chunkData = await response.json();
+                        console.log(`Loaded chunk ${chunkNum}:`, chunkData);
+                        if (Array.isArray(chunkData)) {
+                            documents.push(...chunkData);
+                        } else if (chunkData.documents) {
+                            documents.push(...chunkData.documents);
+                        }
+                    } catch (error) {
+                        console.warn(`Error loading chunk ${chunkNum}:`, error);
+                    }
+                }
+                
+                console.log(`Total documents loaded: ${documents.length}`);
+                
+                // Process and standardize the document format
+                return documents.map(doc => ({
+                    id: doc.id || doc.url,
+                    url: doc.url,
+                    title: doc.title || 'Untitled',
+                    category: doc.category || determineCategory(doc.content?.text || '', doc.title || ''),
+                    text: doc.content?.text || '',
+                    content: doc.content || {},
+                    connections: doc.connections || [],
+                    tags: doc.tags || []
+                }));
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                throw error;
+            }
+        }
+
+        // Determine document category based on content
+        function determineCategory(text, title) {
+            const lowerText = text.toLowerCase();
+            const lowerTitle = title.toLowerCase();
+            
+            // Define category keywords
+            const categories = {
+                research: ['research', 'study', 'analysis', 'experiment', 'methodology'],
+                technical: ['technical', 'implementation', 'system', 'algorithm', 'code'],
+                knowledge_management: ['knowledge', 'learning', 'education', 'training'],
+                transcription: ['transcript', 'transcription', 'interview', 'conversation']
+            };
+            
+            // Check title first as it's more significant
+            for (const [category, keywords] of Object.entries(categories)) {
+                if (keywords.some(keyword => lowerTitle.includes(keyword))) {
+                    return category;
+                }
+            }
+            
+            // Then check content
+            for (const [category, keywords] of Object.entries(categories)) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
+                    return category;
+                }
+            }
+            
+            return 'uncategorized';
+        }
+
+        // Initialize visualization when documents are loaded
+        async function initialize() {
+            try {
+                documents = await loadDocuments();
+                renderBarcodeView();
+                setupSearch();
+                setupFilters();
+            } catch (error) {
+                console.error('Failed to initialize:', error);
+            }
+        }
+
+        // Render barcode visualization
+        function renderBarcodeView() {
+            const container = document.querySelector('.categories-container');
+            container.innerHTML = '';
+
+            // Create 4 columns
+            const columns = [];
+            for (let i = 0; i < 4; i++) {
+                const column = document.createElement('div');
+                column.className = 'category-column';
+                columns.push(column);
+                container.appendChild(column);
+            }
+
+            // Distribute documents across columns sequentially
+            documents.forEach((doc, index) => {
+                const bar = createDocumentBar(doc);
+                columns[index % 4].appendChild(bar);
+            });
+        }
+
+        // Create document bar element
+        function createDocumentBar(doc) {
+            const bar = document.createElement('div');
+            bar.className = 'document-bar';
+            bar.setAttribute('data-id', doc.id);
+            bar.setAttribute('data-category', doc.category);
+            
+            // Calculate height based on content length with logarithmic scaling
+            const contentLength = doc.content.text.length;
+            const minHeight = 10;  // Minimum height in pixels
+            const maxHeight = 100; // Maximum height in pixels
+            
+            // Use logarithmic scaling to dampen the effect of very long texts
+            // log(x+1) ensures we handle empty text gracefully
+            // Divide by 10 to dampen the effect further
+            const normalizedLength = Math.log(contentLength + 1) / 50;
+            
+            // Scale to our desired range
+            const height = minHeight + (normalizedLength * (maxHeight - minHeight));
+            
+            // Clamp the final height between min and max
+            const clampedHeight = Math.max(minHeight, Math.min(maxHeight, height));
+            
+            bar.style.setProperty('--bar-height', `${clampedHeight}px`);
+
+            // Set bar color based on category
+            const colors = {
+                'research': 'var(--research-color)',
+                'technical': 'var(--technical-color)',
+                'knowledge_management': 'var(--knowledge-color)',
+                'transcription': 'var(--transcription-color)',
+                'uncategorized': '#999'
+            };
+            bar.style.backgroundColor = colors[doc.category] || colors.uncategorized;
+
+            // Show tooltip on hover
+            function showTooltip(e) {
+                const tooltip = document.querySelector('.tooltip');
+                tooltip.innerHTML = `
+                    <strong>${doc.title}</strong><br>
+                    Category: ${doc.category.replace('_', ' ')}<br>
+                    ${doc.tags.length ? `Tags: ${doc.tags.join(', ')}<br>` : ''}
+                    ${isMultiSelectMode ? '<br><small>Click to select</small>' : ''}
+                `;
+                tooltip.style.opacity = '1';
+
+                const rect = e.target.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+
+                let left = rect.right + 10;
+                let top = rect.top + (rect.height - tooltipRect.height) / 2;
+
+                if (left + tooltipRect.width > window.innerWidth) {
+                    left = rect.left - tooltipRect.width - 10;
+                }
+                if (top < 0) {
+                    top = 10;
+                } else if (top + tooltipRect.height > window.innerHeight) {
+                    top = window.innerHeight - tooltipRect.height - 10;
+                }
+
+                tooltip.style.left = `${left}px`;
+                tooltip.style.top = `${top}px`;
+            }
+
+            function hideTooltip() {
+                document.querySelector('.tooltip').style.opacity = '0';
+            }
+
+            // Click handler
+            bar.addEventListener('click', () => {
+                if (isMultiSelectMode) {
+                    toggleDocumentSelection(doc, bar);
+                } else {
+                    showPreview(doc);
+                }
+            });
+
+            // Long press for multi-select
+            let pressTimer;
+            bar.addEventListener('mousedown', () => {
+                pressTimer = setTimeout(() => {
+                    if (!isMultiSelectMode) {
+                        enterMultiSelectMode();
+                        toggleDocumentSelection(doc, bar);
+                    }
+                }, 500);
+            });
+
+            bar.addEventListener('mouseup', () => {
+                clearTimeout(pressTimer);
+            });
+
+            // Mouse events for tooltip
+            bar.addEventListener('mouseenter', showTooltip);
+            bar.addEventListener('mouseleave', hideTooltip);
+
+            return bar;
+        }
+
+        // Show document preview
+        function showPreview(doc) {
+            const panel = document.querySelector('.preview-panel');
+            const content = panel.querySelector('.preview-content');
+            
+            content.innerHTML = `
+                <div class="preview-header">
+                    <button class="action-button back-button" onclick="closePreview()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </button>
+                    <div class="preview-actions">
+                        <button class="action-button" onclick="addToPlaylist('${doc.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/>
+                            </svg>
+                        </button>
+                        <button class="action-button" onclick="window.open('${doc.url}', '_blank')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M19 19H5V5H19V19ZM19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM3 5H1v14c0 1.1.9 2 2 2h14v-2H3V5zm16 10H5V7h14v8z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <h3 id="preview-title">${doc.title}</h3>
+                <p class="meta">
+                    Category: ${doc.category.replace('_', ' ')}<br>
+                    ${doc.tags.length ? `Tags: ${doc.tags.join(', ')}<br>` : ''}
+                </p>
+                <div class="tags-section">
+                    <div class="tags-container">
+                        ${doc.tags.map(tag => `
+                            <span class="tag" onclick="filterByTag(event, '${tag}')">
+                                ${tag}
+                                <button class="remove-tag" onclick="removeTag('${doc.id}', '${tag}')">&times;</button>
+                            </span>
+                        `).join('')}
+                    </div>
+                    <div class="tag-input-container">
+                        <input type="text" class="tag-input" placeholder="Add a tag..." aria-label="Add a tag">
+                        <button class="action-button add-tag-button" onclick="addTag('${doc.id}')">Add</button>
+                    </div>
+                </div>
+                <div class="preview-text">
+                    ${formatContent(doc.text)}
+                </div>
+            `;
+            
+            panel.classList.add('active');
+
+            // Setup tag input
+            const tagInput = content.querySelector('.tag-input');
+            tagInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTag(doc.id);
+                }
+            });
+        }
+
+        // Close preview
+        function closePreview() {
+            document.querySelector('.preview-panel').classList.remove('active');
+        }
+
+        // Add to playlist
+        function addToPlaylist(docId) {
+            const doc = documents.find(d => d.id === docId);
+            if (!doc) return;
+
+            if (!window.playlist) {
+                window.playlist = new Set();
+            }
+
+            window.playlist.add(docId);
+            updatePlaylist();
+        }
+
+        // Update playlist
+        function updatePlaylist() {
+            const playlistPanel = document.querySelector('.playlist-panel');
+            const playlistItems = document.querySelector('.playlist-items');
+            
+            if (!playlistItems) return;
+
+            playlistItems.innerHTML = '';
+            
+            window.playlist.forEach(docId => {
+                const doc = documents.find(d => d.id === docId);
+                if (doc) {
+                    const item = document.createElement('div');
+                    item.className = 'playlist-item';
+                    item.innerHTML = `
+                        <span>${doc.title}</span>
+                        <button class="remove-playlist-item" onclick="removeFromPlaylist('${docId}')">&times;</button>
+                    `;
+                    playlistItems.appendChild(item);
+                }
+            });
+
+            if (window.playlist.size > 0) {
+                playlistPanel.classList.add('active');
+            }
+        }
+
+        // Remove from playlist
+        function removeFromPlaylist(docId) {
+            window.playlist.delete(docId);
+            updatePlaylist();
+            
+            if (window.playlist.size === 0) {
+                document.querySelector('.playlist-panel').classList.remove('active');
+            }
+        }
+
+        // Add tag
+        function addTag(docId) {
+            const doc = documents.find(d => d.id === docId);
+            if (!doc) return;
+
+            const tagInput = document.querySelector('.tag-input');
+            const tag = tagInput.value.trim();
+            
+            if (tag && !doc.tags.includes(tag)) {
+                // Initialize tags array if it doesn't exist
+                if (!doc.tags) doc.tags = [];
+                doc.tags.push(tag);
+                console.log(`Added tag "${tag}" to doc ${docId}`, doc.tags);
+                showPreview(doc);
+                setupFilters();
+                tagInput.value = '';
+                updateVisibility(); // Make sure visibility is updated
+            }
+        }
+
+        // Remove tag
+        function removeTag(docId, tag) {
+            const doc = documents.find(d => d.id === docId);
+            if (!doc) return;
+
+            doc.tags = doc.tags.filter(t => t !== tag);
+            console.log(`Removed tag "${tag}" from doc ${docId}`, doc.tags);
+            showPreview(doc);
+            setupFilters();
+            updateVisibility(); // Make sure visibility is updated
+        }
+
+        // Filter by clicking a tag
+        function filterByTag(event, tagText) {
+            if (event.target.classList.contains('remove-tag')) return;
+            
+            // If clicking the same tag, clear selection
+            if (selectedTag === tagText) {
+                selectedTag = null;
+                document.querySelectorAll('.tag').forEach(tag => {
+                    tag.classList.remove('selected');
+                });
+            } else {
+                selectedTag = tagText;
+                document.querySelectorAll('.tag').forEach(tag => {
+                    if (tag.textContent.trim() === selectedTag) {
+                        tag.classList.add('selected');
+                    } else {
+                        tag.classList.remove('selected');
+                    }
+                });
+            }
+            
+            console.log('Selected tag:', selectedTag);
+            console.log('Documents with this tag:', documents.filter(d => d.tags && d.tags.includes(selectedTag)).map(d => d.id));
+            updateVisibility();
+        }
+
+        // Combined visibility update
+        function updateVisibility() {
+            const searchTerm = document.querySelector('.search-input').value.toLowerCase();
+            const selectedCategories = new Set(
+                Array.from(document.querySelectorAll('.filter-option input:checked'))
+                    .map(input => input.value)
+            );
+
+            let visibleCount = 0;
+            document.querySelectorAll('.document-bar').forEach(bar => {
+                const doc = documents.find(d => d.id === bar.dataset.id);
+                if (!doc) return;
+                
+                // First apply search and category filters
+                const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(doc.category);
+                const searchMatch = !searchTerm || 
+                    doc.title.toLowerCase().includes(searchTerm) || 
+                    doc.text.toLowerCase().includes(searchTerm);
+                
+                // Then apply tag filter if one is selected
+                const tagMatch = !selectedTag || (doc.tags && doc.tags.includes(selectedTag));
+                
+                const shouldShow = categoryMatch && searchMatch && tagMatch;
+                if (shouldShow) visibleCount++;
+                
+                if (bar.style.display !== (shouldShow ? 'block' : 'none')) {
+                    bar.style.display = shouldShow ? 'block' : 'none';
+                }
+            });
+            
+            console.log(`Visibility update - Selected tag: ${selectedTag}, Visible docs: ${visibleCount}`);
+        }
+
+        // Setup search functionality
+        function setupSearch() {
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('input', updateVisibility);
+        }
+
+        // Setup category and tag filters
+        function setupFilters() {
+            const filterMenu = document.querySelector('.filter-menu');
+            const categories = [...new Set(documents.map(doc => doc.category))].sort();
+            
+            // Get all unique tags from all documents
+            const allTags = [...new Set(
+                documents
+                    .filter(doc => doc.tags && Array.isArray(doc.tags))
+                    .flatMap(doc => doc.tags)
+            )].filter(Boolean).sort();
+            
+            console.log('All available tags:', allTags);
+            console.log('Documents with tags:', documents.filter(d => d.tags && d.tags.length > 0).map(d => ({id: d.id, tags: d.tags})));
+
+            // Preserve selected categories
+            const selectedCategories = new Set(
+                Array.from(filterMenu.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(input => input.value)
+            );
+
+            // Create filter menu content
+            filterMenu.innerHTML = `
+                <div class="filter-section">
+                    <div class="filter-section-title">Categories</div>
+                    ${categories.map(category => `
+                        <div class="filter-option">
+                            <input type="checkbox" id="${category}" value="${category}"
+                                ${selectedCategories.size === 0 || selectedCategories.has(category) ? 'checked' : ''}>
+                            <label for="${category}">${category}</label>
+                        </div>
+                    `).join('')}
+                </div>
+                ${allTags.length > 0 ? `
+                    <div class="filter-section">
+                        <div class="filter-section-title">Tags</div>
+                        ${allTags.map(tag => `
+                            <div class="filter-option">
+                                <span class="tag ${tag === selectedTag ? 'selected' : ''}" 
+                                      onclick="filterByTag(event, '${tag}')">${tag}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+
+            // Add event listeners for category checkboxes
+            filterMenu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateVisibility);
+            });
+        }
+
+        // Handle filter button click
+        const filterButton = document.querySelector('.filter-button');
+        const filterMenu = document.querySelector('.filter-menu');
+
+        filterButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterMenu.classList.toggle('active');
+        });
+
+        // Close filter menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!filterMenu.contains(e.target) && !filterButton.contains(e.target)) {
+                filterMenu.classList.remove('active');
+            }
+        });
+
+        // Prevent filter menu from closing when clicking inside
+        filterMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Format content for preview
+        function formatContent(text) {
+            // Remove HTML tags
+            text = text.replace(/<[^>]*>/g, '');
+            // Truncate if too long
+            if (text.length > 1000) {
+                text = text.slice(0, 1000) + '...';
+            }
+            // Split into paragraphs
+            return text.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+        }
+
+        // Download playlist as JSON
+        function downloadPlaylist() {
+            if (!window.playlist || window.playlist.size === 0) {
+                alert('Playlist is empty');
+                return;
+            }
+
+            // Create playlist data with documents and their tags
+            const playlistData = {
+                created_at: new Date().toISOString(),
+                documents: Array.from(window.playlist).map(docId => {
+                    const doc = documents.find(d => d.id === docId);
+                    if (!doc) return null;
+                    
+                    return {
+                        id: doc.id,
+                        title: doc.title,
+                        url: doc.url,
+                        category: doc.category,
+                        tags: doc.tags,
+                        content: {
+                            text: doc.text.slice(0, 500) + (doc.text.length > 500 ? '...' : '') // Include preview of content
+                        }
+                    };
+                }).filter(Boolean)
+            };
+
+            // Create download link
+            const dataStr = JSON.stringify(playlistData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `playlist_${new Date().toISOString().split('T')[0]}.json`;
+            
+            // Trigger download
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Cleanup
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        // Start initialization when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>

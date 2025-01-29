@@ -72,6 +72,26 @@ header h1 {
     display: none;
 }
 
+.view-toggle {
+    font-size: 1.8rem;
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.view-toggle:hover {
+    transform: scale(1.05);
+    background: var(--primary-light);
+}
+
 .main-content {
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -1698,5 +1718,13 @@ button:active {
     .add-to-playlist-button {
         padding: 8px 12px;
         font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .view-toggle {
+        font-size: 1.5rem;
+        padding: 0.4rem 0.8rem;
+        margin-right: 0.5rem;
     }
 }
